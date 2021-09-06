@@ -319,4 +319,3 @@ heapNode heapExtractMin(heapNode* hp,int* indexes){
     minHeapify(hp,0,indexes);
     return min;
 }
-

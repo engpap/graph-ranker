@@ -7,15 +7,12 @@
 #define DIM_LINE_2 20
 char output[DIM_LINE];
 
-
-
 typedef struct{ //elem dell'heap
     int name; //nome del relativo vertice
     long int dist; //distanza min corrente dal sorgente
 }heapNode;
 
 int heapSize=0;
-
 
 unsigned int left(unsigned int i);
 unsigned int right(unsigned int i);
@@ -25,7 +22,6 @@ void minHeapify(heapNode* hp, unsigned int i,int* indexes);
 void heapDecreaseKey(heapNode *hp,unsigned int i, long int key, int* indexes);
 void minHeapInsert(heapNode *hp, long int key,unsigned int dim_max,int *indexes);
 heapNode heapExtractMin(heapNode* hp, int* indexes);
-
 
 //RANK tramite un max-heap
 typedef struct{
@@ -56,7 +52,6 @@ void rankHeapify(rank_node rank[], unsigned int i){ //per mantenere le propriet�
         rankHeapify(rank,max);
     }
 }
-
 
 void insertNode(rank_node rank[],unsigned int ind, long int res, unsigned int k){ //per inserire i nodi in classifica
     if(rank_size>=k){ //se lo heap è pieno, metto il nodo in cima in modo da togliere quello con path più grande
@@ -103,9 +98,6 @@ int parser(const char* s, char delim){
     return temp;
 }
 
-
-
-
 int main(){
 
     unsigned int contGraph=0;
@@ -146,7 +138,6 @@ int main(){
     while(c!=NULL){ //fintantochè non è EOF
         while(strcmp(line,command1) !=0){ //fintatochè il comando non è Topk
             if(strcmp(line,command2)==0){ //se il comando è AggiungiGrafo --> aggiungo grafo
-
 
                 for(i=0;i<d;i++){  //scorro riga per riga
                     c=fgets(line,DIM_LINE,stdin); //leggo la riga
@@ -235,7 +226,6 @@ int main(){
         }
         printf("\n");
 
-
         //CHECK NEXT COMMAND
         c=fgets(line,DIM_LINE,stdin);
         line[strlen(line)-1]='\0';
@@ -244,7 +234,6 @@ int main(){
     return 0;
 }
 //END main
-
 
 
 unsigned int left(unsigned int i){
@@ -306,7 +295,6 @@ void minHeapInsert(heapNode *hp,long int key,unsigned int dim_max,int* indexes){
         heapDecreaseKey(hp,heapSize,key,indexes);
     }
 }
-
 
 heapNode heapExtractMin(heapNode* hp,int* indexes){
     if(heapSize<1){ //se non ci sono elem nel heap

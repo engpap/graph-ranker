@@ -7,10 +7,11 @@
 #define DIM_LINE_2 20
 char output[DIM_LINE];
 
-typedef struct{ //elem dell'heap
-    int name; //nome del relativo vertice
-    long int dist; //distanza min corrente dal sorgente
-}heapNode;
+// Heap node structure for priority queue
+typedef struct {
+    int name; // Name of the related vertex
+    long int dist; // Current minimum distance from the source
+} heapNode;
 
 int heapSize=0;
 
@@ -23,7 +24,7 @@ void heapDecreaseKey(heapNode *hp,unsigned int i, long int key, int* indexes);
 void minHeapInsert(heapNode *hp, long int key,unsigned int dim_max,int *indexes);
 heapNode heapExtractMin(heapNode* hp, int* indexes);
 
-//RANK tramite un max-heap
+// Rank node structure for max heap
 typedef struct{
     unsigned int index;
     long int result;
@@ -31,119 +32,61 @@ typedef struct{
 
 int rank_size=0;
 
-void swapRank(rank_node* a, rank_node* b){
-    rank_node temp=*a;
-    *a=*b;
-    *b=temp;
-}
+void swapRank(rank_node* a, rank_node* b);
+void rankHeapify(rank_node rank[], unsigned int i);
+void insertNode(rank_node rank[],unsigned int ind, long int res, unsigned int k);
 
-void rankHeapify(rank_node rank[], unsigned int i){ //per mantenere le proprietà di max-heap
-    unsigned int l=left(i);
-    unsigned int r=right(i);
-    unsigned int max;
-    if (l< rank_size && rank[l].result > rank[i].result )
-        max=l;
-    else
-        max=i;
-    if(r<rank_size && rank[r].result > rank[max].result)
-        max=r;
-    if(max!=i){
-        swapRank(&rank[i],&rank[max]);
-        rankHeapify(rank,max);
-    }
-}
+// Static such that it does not change value from one call to another of the function, global such that it is easily accessible from main and functions
+// It is used by the parser function to keep track of the position in the input string
+static int cont=0; 
 
-void insertNode(rank_node rank[],unsigned int ind, long int res, unsigned int k){ //per inserire i nodi in classifica
-    if(rank_size>=k){ //se lo heap è pieno, metto il nodo in cima in modo da togliere quello con path più grande
-        if(rank[0].result>res){ //lo tolgo solo se quello che inserisco ha path più corto rispetto a quello presente, altrimenti non ottengo una classifica coerente
-            rank[0].result=res;
-            rank[0].index=ind;
-            rankHeapify(rank,0);
-        }
-    }
-    else{ //se lo heap non è pieno
-        rank[rank_size].result=res;
-        rank[rank_size].index=ind;
-        rank_size++;
-        if(rank_size>1) //se è presente più di un elem, è necessario mantenere le prop di max heap
-            rankHeapify(rank,parent(rank_size-1));
-    }
-}
-
-static int cont=0; //static in modo che non cambi valore da una chiamata e  l'altra di funzione, globale in modo che sia facilmente accessibile da main e funzioni
-//serve per la funzione parser, per scorrere nella stringa di input
-
-int my_atoi(const char* input){
-    int i,out=0;
-    for(i=0;input[i]!='\0';i++)
-        out=out*10+input[i]-'0';
-        //-'0' toglie 48 alla codifica ASCII in modo da convertire il carattere nel numero
-        //out*10 serve quando il numero da convertire è >9
-    return out;
-}
-
-int parser(const char* s, char delim){
-    if(s[cont]=='\0' || s[cont]=='\n')
-        return -1;
-    int i=0;
-    int temp;
-    while(s[cont]!=delim && s[cont]!='\0' && s[cont]!='\n'){
-        output[i]=s[cont];
-        i++;
-        cont++;
-    }
-    output[i]='\0';
-    cont++;
-    temp= my_atoi(output); //converto in int
-    return temp;
-}
+int my_atoi(const char* input);
+int parser(const char* s, char delim);
 
 int main(){
 
     unsigned int contGraph=0;
 
-    //get input "d" e "k"
+    // Get input "d" e "k"
     unsigned int d,k;
     char line[DIM_LINE];
     char line2[DIM_LINE_2];
-    char* c; //per evitare warning fgets
+    char* c; // Avoid warning for fgets
     c=fgets(line2,DIM_LINE_2,stdin);
-    if(c){} //per evitare warning fgets
+    if(c){} // Avoid warning for fgets
     d=(unsigned int)parser(line2,' ');
     k=(unsigned int)parser(line2,'\n');
     cont=0;
-    long int distances[d]; //array dove memorizzo gli indici in cui sono presenti i nodi nella PQ:
-                            // es. in 0 c'è l'indice del relativo nodo nella coda di priorità
+    long int distances[d]; // Array to store the index of the nodes in the priority queue, e.g. in 0 there is the index of the relative node in the priority queue
     int indexes[d];
 
     rank_node rank[k];
     heapNode minHeap[d];
-    unsigned int g[d][d]; //grafo rapp tramite matrice di adiacenza
+    unsigned int g[d][d]; // Graph represented as an adjacency matrix
 
-    //init rank
+    // Init rank
     for(unsigned int i=0;i<k;i++){
         rank[i].index=0;
         rank[i].result=0;
     }
 
-    //inserimento grafi da input
+    // Insertion of graphs from input
     unsigned int i,j,w;
     char command1[DIM_LINE_2]="TopK";
     char command2[DIM_LINE_2]="AggiungiGrafo";
 
-    //PRENDO IL COMANDO
     c=fgets(line,DIM_LINE,stdin);
-    line[strlen(line)-1]='\0'; //per togliere \n
+    line[strlen(line)-1]='\0'; // Remove newline
 
-    while(c!=NULL){ //fintantochè non è EOF
-        while(strcmp(line,command1) !=0){ //fintatochè il comando non è Topk
-            if(strcmp(line,command2)==0){ //se il comando è AggiungiGrafo --> aggiungo grafo
+    while(c!=NULL){ // As not as it is not EOF
+        while(strcmp(line,command1) !=0){ // As long as the command is not "TopK"
+            if(strcmp(line,command2)==0){ // If the command is "AggiungiGrafo" then insert the graph
 
-                for(i=0;i<d;i++){  //scorro riga per riga
-                    c=fgets(line,DIM_LINE,stdin); //leggo la riga
+                for(i=0;i<d;i++){  // Iteration over the rows
+                    c=fgets(line,DIM_LINE,stdin); // Read the row
                     if(c){}
 
-                    for(j=0;j<d;j++){   //scorro colonna per collona, tenendo fissa la riga
+                    for(j=0;j<d;j++){  // Iteration over the columns, keeping row fixed
 
                         w=(unsigned int)parser(line,',');
                         g[i][j]=w;
@@ -152,20 +95,20 @@ int main(){
 
                     cont=0;
                 }
-                //init per dijkstra
+                // Init for Dijkstra
                 for(i=0;i<d;i++){
                     minHeap[i].dist=0;
                     minHeap[i].name=-1;
                 }
 
-                //DIJKSTRA
+                // DIJKSTRA
                 long int res=0;
                 int bool=0;
                 for(i=0;i<d;i++){
                     if(g[0][i]!=0)
                         bool=1;
                 }
-                if(bool!=0) {//se la prima riga della matrice ha tutti 0
+                if(bool!=0) { // If the first row of the matrix has all 0
 
                     heapSize=0;
                     indexes[0]=0;
@@ -182,15 +125,15 @@ int main(){
                     while(heapSize!=0){
                         heapNode u;
                         u=heapExtractMin(minHeap,indexes);
-                        if(u.dist==INF)    //altrimenti ci sono casi in cui il nodo non è raggiungibile e l'algoritmo dà valori non corretti
+                        if(u.dist==INF)  // Otherwise there are cases where the node is not reachable and the algorithm gives incorrect values
                             distances[u.name]=0;
                         else
                             distances[u.name]=u.dist;
                         j=0;
 
-                        while(j<d){
-                            if(g[u.name][j]!=0 && j!=u.name){ //altrimenti conta anche gli autoanelli ma questi sono tolti dalla coda
-                                unsigned int v=j; //dest
+                        while(j<d){ 
+                            if(g[u.name][j]!=0 && j!=u.name){ // Otherwise it counts also the self loops, but these are removed from the queue
+                                unsigned int v=j; // Destination vertex
                                 unsigned int weight=g[u.name][j];
                                 int z;
                                 z=indexes[v];
@@ -205,20 +148,19 @@ int main(){
 
                     for(i=1;i<d;i++)
                         res+=distances[i];
-                    //--------------
                 }
 
-                //insertion in classifica
+                // Insert the graph into the rank
                 insertNode(rank,contGraph,res,k);
 
                 contGraph++;
             }
-            //CHECK NEXT COMMAND
+            // Check next command
             c=fgets(line,DIM_LINE,stdin);
             line[strlen(line)-1]='\0';
             if(c){}
         }
-        //stampo la classifica
+        // Print the rank
         for(i=0;i<contGraph && i<k;i++){
             printf("%d",rank[i].index);
             if(i!=k-1 && i!=contGraph-1)
@@ -226,15 +168,16 @@ int main(){
         }
         printf("\n");
 
-        //CHECK NEXT COMMAND
+        // Check next command
         c=fgets(line,DIM_LINE,stdin);
         line[strlen(line)-1]='\0';
 
     }
     return 0;
 }
-//END main
+// END main
 
+// HEAP FUNCTIONS
 
 unsigned int left(unsigned int i){
     return 2*i+1;
@@ -248,7 +191,6 @@ unsigned int parent(unsigned int i){
     return (int)((i-1)/2);
 }
 
-
 void swap( heapNode* a,  heapNode* b,int* indexes, int pos1,int pos2){
     heapNode temp = *a;
     *a=*b;
@@ -259,7 +201,7 @@ void swap( heapNode* a,  heapNode* b,int* indexes, int pos1,int pos2){
 
 }
 
-void minHeapify(heapNode *hp, unsigned int i,int* indexes){ //per rendere lo heap sempre un min-heap
+void minHeapify(heapNode *hp, unsigned int i,int* indexes){ // To keep the heap as min-heap 
     unsigned int l=left(i);
     unsigned int r=right(i);
     unsigned int min;
@@ -276,12 +218,12 @@ void minHeapify(heapNode *hp, unsigned int i,int* indexes){ //per rendere lo hea
 }
 
 void heapDecreaseKey(heapNode *hp, unsigned int i, long int key, int* indexes){
-    if (key > hp[i].dist) //devo aggiornare solo se il path è minore di quello salvato
+    if (key > hp[i].dist) // Update only if the path is less than the saved one
         printf("error\n");
     else{
         hp[i].dist=key;
         while(i>0 && hp[parent(i)].dist > hp[i].dist) {
-            swap(&hp[parent(i)],&hp[i],indexes,hp[parent(i)].name,hp[i].name); //passo anche i nomi in modo da aggiornare l'array indexes
+            swap(&hp[parent(i)],&hp[i],indexes,hp[parent(i)].name,hp[i].name); // Pass the names as input so that the indexes array is updated
             i=parent(i);
         }
     }
@@ -290,20 +232,90 @@ void heapDecreaseKey(heapNode *hp, unsigned int i, long int key, int* indexes){
 
 void minHeapInsert(heapNode *hp,long int key,unsigned int dim_max,int* indexes){
     heapSize++;
-    if(heapSize<dim_max){ //check dim max
+    if(heapSize<dim_max){ // Check max dimension
         hp[ heapSize ].dist=INF;
         heapDecreaseKey(hp,heapSize,key,indexes);
     }
 }
 
 heapNode heapExtractMin(heapNode* hp,int* indexes){
-    if(heapSize<1){ //se non ci sono elem nel heap
+    if(heapSize<1){ // If there are no elements in the heap
         printf("error\n");
         exit(0);
     }
-    heapNode min=hp[0]; //il min è la radice
+    heapNode min=hp[0]; // The minimum is the root
     swap(&hp[0],&hp[heapSize-1],indexes,hp[0].name,hp[heapSize-1].name);
     heapSize--;
     minHeapify(hp,0,indexes);
     return min;
+}
+
+/// RANK HEAP FUNCTIONS
+
+void swapRank(rank_node* a, rank_node* b){
+    rank_node temp=*a;
+    *a=*b;
+    *b=temp;
+}
+
+// To keep max-heap properties
+void rankHeapify(rank_node rank[], unsigned int i){ 
+    unsigned int l=left(i);
+    unsigned int r=right(i);
+    unsigned int max;
+    if (l< rank_size && rank[l].result > rank[i].result )
+        max=l;
+    else
+        max=i;
+    if(r<rank_size && rank[r].result > rank[max].result)
+        max=r;
+    if(max!=i){
+        swapRank(&rank[i],&rank[max]);
+        rankHeapify(rank,max);
+    }
+}
+
+// To insert nodes into the rank
+void insertNode(rank_node rank[],unsigned int ind, long int res, unsigned int k){
+    if(rank_size>=k){ // If the heap is full, insert node as root so that the node with largest path is removed
+        if(rank[0].result>res){ // Remove only if node that is being inserted has a shorter path compared to the existing one; otherwise, no coherent ranking is obtained
+            rank[0].result=res;
+            rank[0].index=ind;
+            rankHeapify(rank,0);
+        }
+    }
+    else{ // If the heap is not full, insert node as a leaf and then heapify
+        rank[rank_size].result=res;
+        rank[rank_size].index=ind;
+        rank_size++;
+        if(rank_size>1) // If there is only one node, no need to heapify
+            rankHeapify(rank,parent(rank_size-1));
+    }
+}
+
+// PARSER FUNCTIONS
+
+int my_atoi(const char* input){
+    int i,out=0;
+    for(i=0;input[i]!='\0';i++)
+        out=out*10+input[i]-'0';
+        // - '0' removes 48 from the ASCII code to convert the character into the number
+        // out*10 is used when the number to convert is >9
+    return out;
+}
+
+int parser(const char* s, char delim){
+    if(s[cont]=='\0' || s[cont]=='\n')
+        return -1;
+    int i=0;
+    int temp;
+    while(s[cont]!=delim && s[cont]!='\0' && s[cont]!='\n'){
+        output[i]=s[cont];
+        i++;
+        cont++;
+    }
+    output[i]='\0';
+    cont++;
+    temp= my_atoi(output); // Convert string to int
+    return temp;
 }
